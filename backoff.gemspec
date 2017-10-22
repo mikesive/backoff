@@ -1,5 +1,5 @@
 Gem::Specification.new do |s|
-  s.name             = 'Backoff'
+  s.name             = 'backoff'
   s.version          = '0.1.0'
   s.summary          = 'Very simple exponential backoff for Ruby classes.'
   s.description      = 'Very simple exponential backoff for Ruby classes.'
