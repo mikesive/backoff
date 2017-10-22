@@ -25,8 +25,8 @@ my_instance.backoff.my_method
 
 The `:backoff` method takes an optional hash of 3 different options:
 
-- `:retries`: the max number of times to retry the method. The default is 5.
+- `:retries` the max number of times to retry the method. The default is 5.
 
-- `:catch_errors`: an error class or array of error classes to perform a retry after. The default is `:all` which will retry after any error type.
+- `:catch_errors` an error class or array of error classes to perform a retry after. The default is `:all` which will retry after any error type.
 
-- `:base`: the base number of seconds to wait before trying again. The default is 2. For example, after 1 failure, the sleep time will be 2, then 4, then 8 etc. etc.
+- `:base` the base number of seconds to wait before trying again. The default is 2. For example, after 1 failure, the sleep time will be 2, then 4, then 8 etc. etc.
