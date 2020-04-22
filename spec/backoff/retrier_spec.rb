@@ -1,26 +1,24 @@
 require_relative '../spec_helper'
 
 RSpec.describe Backoff::Retrier do
-  let(:args) { [backoffable, config] }
   let(:config) { { retries: 3, catch_errors: [rescuable] } }
-  let(:defaults) { described_class::DEFAULT_OPTS }
-  let(:retrier) { described_class.new(*args) }
+  let(:retrier) { described_class.new(backoffable) }
   let(:backoffable) { Backoffable.new }
   let(:rescuable) { RuntimeError }
-  let(:unrescuable) { ArgumentError }
+  let(:unrescuable) { Net::OpenTimeout }
 
   before { allow(retrier).to receive(:sleep).and_return(true) }
 
-  subject { retrier.action }
+  subject { retrier.configure(config); retrier.action }
 
-  describe '#config' do
-    subject { retrier.config }
+  describe '#configure' do
+    subject { retrier.configure(config); retrier.config }
     it { is_expected.to be }
 
     context 'with no args' do
       let(:config) { {} }
-      it 'should be empty' do
-        expect(subject).to be_empty
+      it 'should be default' do
+        expect(subject).to eq(described_class::DEFAULT_OPTS)
       end
     end
 
@@ -29,16 +27,32 @@ RSpec.describe Backoff::Retrier do
         expect(subject[:retries]).to eq(config[:retries])
       end
     end
-  end
 
-  describe '#get_opts' do
-    before { allow(backoffable).to receive(:action).and_raise(rescuable) }
-    context 'with some config' do
-      it 'should get value from config or default' do
-        expect(defaults).to receive(:[]).twice.with(:base).and_call_original
-        expect(defaults).not_to receive(:[]).with(:catch_errors).and_call_original
-        expect(defaults).not_to receive(:[]).with(:retries).and_call_original
-        subject rescue nil
+    context 'incorrect args' do
+      [:base, :retries].each do |opt|
+        context "#{opt}" do
+          [0.2, "0.2", :zeropointtwo].each do |arg|
+            context "#{arg}" do
+              let(:config) { { opt => arg } }
+
+              it 'throw ArgumentError' do
+                expect { subject }.to raise_error(ArgumentError)
+              end
+            end
+          end
+        end
+      end
+
+      context ':catch_errors' do
+        [:none, 1, 1.2].each do |arg|
+          context "#{arg}" do
+            let(:config) { { catch_errors: arg } }
+
+            it 'throw ArgumentError' do
+              expect { subject }.to raise_error(ArgumentError)
+            end
+          end
+        end
       end
     end
   end
@@ -64,7 +78,7 @@ RSpec.describe Backoff::Retrier do
       end
 
       it 'should increment sleep' do
-        base = defaults[:base]
+        base = described_class::DEFAULT_OPTS[:base]
         expect(retrier).to receive(:sleep).with(base).with(base**2)
         subject rescue nil
       end
